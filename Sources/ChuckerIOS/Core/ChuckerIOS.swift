@@ -1,6 +1,10 @@
 import Foundation
+#if canImport(UIKit)
 import UIKit
+#endif
+#if canImport(UserNotifications)
 import UserNotifications
+#endif
 
 /// Main ChuckerIOS class - entry point for the library
 public class ChuckerIOS {
@@ -20,8 +24,8 @@ public class ChuckerIOS {
     /// Notification manager
     public private(set) var notificationManager: NotificationManager?
     
-    /// Floating button manager
-    public private(set) var floatingButtonManager: FloatingButtonManager?
+    /// Floating button manager (not available in this build)
+    // public private(set) var floatingButtonManager: FloatingButtonManager?
     
     private init() {
         self.configuration = .default
@@ -42,22 +46,12 @@ public class ChuckerIOS {
     /// Stop monitoring network requests
     public func stop() {
         interceptor?.stopIntercepting()
-        floatingButtonManager?.hide()
+        // floatingButtonManager?.hide()
     }
     
     /// Show the ChuckerIOS UI
     public func show() {
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let window = windowScene.windows.first else {
-            return
-        }
-        
-        let storyboard = UIStoryboard(name: "ChuckerIOS", bundle: Bundle.module)
-        guard let navigationController = storyboard.instantiateInitialViewController() as? UINavigationController else {
-            return
-        }
-        
-        window.rootViewController?.present(navigationController, animated: true)
+        print("ChuckerIOS: UI not available in this build")
     }
     
     /// Get all captured transactions
@@ -88,9 +82,7 @@ public class ChuckerIOS {
         }
         
         // Setup floating button
-        if floatingButtonManager == nil && configuration.enableFloatingButton {
-            floatingButtonManager = FloatingButtonManager()
-        }
+        // Floating button not available in this build
     }
 }
 
@@ -107,6 +99,6 @@ extension ChuckerIOS: URLSessionInterceptorDelegate {
         }
         
         // Update floating button badge
-        floatingButtonManager?.updateBadge(count: storage?.getAllTransactions().count ?? 0)
+        // Floating button not available in this build
     }
 }

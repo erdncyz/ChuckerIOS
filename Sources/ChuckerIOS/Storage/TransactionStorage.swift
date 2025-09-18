@@ -39,7 +39,7 @@ public class TransactionStorage {
     }
     
     /// Get transactions filtered by method
-    public func getTransactions(filteredBy method: String) -> [HTTPTransaction] {
+    public func getTransactions(filteredByMethod method: String) -> [HTTPTransaction] {
         return queue.sync {
             return transactions.filter { $0.request.method.uppercased() == method.uppercased() }
                 .sorted { $0.timestamp > $1.timestamp }

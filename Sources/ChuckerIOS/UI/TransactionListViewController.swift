@@ -1,4 +1,6 @@
+#if canImport(UIKit)
 import UIKit
+#endif
 
 /// Main view controller that displays the list of HTTP transactions
 public class TransactionListViewController: UIViewController {

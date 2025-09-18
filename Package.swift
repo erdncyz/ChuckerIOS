@@ -6,7 +6,8 @@ import PackageDescription
 let package = Package(
     name: "ChuckerIOS",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v13),
+        .macOS(.v10_15)
     ],
     products: [
         .library(
@@ -21,10 +22,7 @@ let package = Package(
         .target(
             name: "ChuckerIOS",
             dependencies: [],
-            path: "Sources/ChuckerIOS",
-            resources: [
-                .process("Resources")
-            ]
+            path: "Sources/ChuckerIOS"
         ),
         .testTarget(
             name: "ChuckerIOSTests",
