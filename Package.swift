@@ -14,6 +14,10 @@ let package = Package(
             name: "ChuckerIOS",
             targets: ["ChuckerIOS"]
         ),
+        .executable(
+            name: "TestApp",
+            targets: ["TestApp"]
+        ),
     ],
     dependencies: [
         // No external dependencies for now - keeping it lightweight
@@ -23,6 +27,11 @@ let package = Package(
             name: "ChuckerIOS",
             dependencies: [],
             path: "Sources/ChuckerIOS"
+        ),
+        .executableTarget(
+            name: "TestApp",
+            dependencies: ["ChuckerIOS"],
+            path: "TestApp"
         ),
         .testTarget(
             name: "ChuckerIOSTests",
