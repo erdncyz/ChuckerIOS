@@ -12,12 +12,15 @@ public class URLSessionInterceptor: NSObject {
     public weak var delegate: URLSessionInterceptorDelegate?
     private let configuration: ChuckerConfiguration
     public var startTimes: [String: Date] = [:]
-    private var isIntercepting = false
+    public var isIntercepting = false
     
     public init(configuration: ChuckerConfiguration = .default) {
         self.configuration = configuration
         super.init()
-        log("URLSessionInterceptor initialized", level: .info)
+        
+        // Register URLProtocol immediately to ensure early interception
+        URLProtocol.registerClass(ChuckerURLProtocol.self)
+        log("URLSessionInterceptor initialized and URLProtocol registered", level: .info)
     }
     
     /// Start intercepting URLSession requests
@@ -28,7 +31,7 @@ public class URLSessionInterceptor: NSObject {
         }
         
         log("Starting URLSession interception", level: .info)
-        swizzleURLSessionMethods()
+        // URLProtocol is already registered in init, just mark as intercepting
         isIntercepting = true
         log("URLSession interception started successfully", level: .info)
     }
@@ -41,23 +44,10 @@ public class URLSessionInterceptor: NSObject {
         }
         
         log("Stopping URLSession interception", level: .info)
-        restoreURLSessionMethods()
         isIntercepting = false
         log("URLSession interception stopped", level: .info)
     }
     
-    private func swizzleURLSessionMethods() {
-        log("Setting up URLSession method swizzling", level: .debug)
-        
-        // For now, we'll use a simple approach that works in command line environment
-        // In a real iOS app, we would use proper method swizzling
-        log("Method swizzling setup completed (simplified version)", level: .info)
-    }
-    
-    private func restoreURLSessionMethods() {
-        log("Restoring original URLSession methods", level: .debug)
-        log("Method restoration completed", level: .info)
-    }
     
     /// Manually capture a transaction (for testing purposes)
     public func captureTransaction(request: URLRequest, response: URLResponse?, data: Data?, error: Error?) {
@@ -75,8 +65,84 @@ public class URLSessionInterceptor: NSObject {
     }
 }
 
+// MARK: - ChuckerURLProtocol
+
+class ChuckerURLProtocol: URLProtocol {
+    
+    private var dataTask: URLSessionDataTask?
+    private var startTime: Date?
+    
+    override class func canInit(with request: URLRequest) -> Bool {
+        // Only intercept HTTP/HTTPS requests
+        guard let scheme = request.url?.scheme else { return false }
+        guard scheme == "http" || scheme == "https" else { return false }
+        
+        // Log when we're checking a request
+        log("🔍 ChuckerIOS: Checking request: \(request.url?.absoluteString ?? "unknown")", level: .debug)
+        
+        // Always intercept when ChuckerIOS is available (don't check isIntercepting flag)
+        // This ensures we capture all requests
+        return true
+    }
+    
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        return request
+    }
+    
+    override func startLoading() {
+        log("🔍 ChuckerIOS: Intercepting request: \(request.url?.absoluteString ?? "unknown")", level: .debug)
+        
+        startTime = Date()
+        
+        // Create a new URLSession to handle the request
+        let config = URLSessionConfiguration.default
+        let session = URLSession(configuration: config)
+        
+        dataTask = session.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else { return }
+            
+            // Calculate duration
+            let duration = self.startTime?.timeIntervalSinceNow.magnitude
+            
+            // Create transaction
+            let transaction = HTTPTransaction(
+                request: HTTPRequest(from: self.request),
+                response: response != nil ? HTTPResponse(from: response!, data: data) : nil,
+                error: error != nil ? HTTPError(from: error!) : nil,
+                timestamp: self.startTime ?? Date(),
+                duration: duration
+            )
+            
+            // Notify interceptor
+            ChuckerIOS.shared.interceptor?.delegate?.interceptor(ChuckerIOS.shared.interceptor!, didCapture: transaction)
+            
+            // Forward the response to the original client
+            if let response = response {
+                self.client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            }
+            
+            if let data = data {
+                self.client?.urlProtocol(self, didLoad: data)
+            }
+            
+            if let error = error {
+                self.client?.urlProtocol(self, didFailWithError: error)
+            } else {
+                self.client?.urlProtocolDidFinishLoading(self)
+            }
+        }
+        
+        dataTask?.resume()
+    }
+    
+    override func stopLoading() {
+        dataTask?.cancel()
+        dataTask = nil
+    }
+}
+
 // MARK: - URLSession Extension
-// Note: URLSession extension not implemented in this simplified version
+// Note: Method swizzling extension removed for now - using URLProtocol approach
 
 // MARK: - Logging
 
