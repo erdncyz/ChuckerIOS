@@ -122,4 +122,9 @@ class iOSApp {
 }
 
 // iOS Test uygulamasını çalıştır
-iOSApp.run()
+@main
+struct iOSAppMain {
+    static func main() {
+        iOSApp.run()
+    }
+}
