@@ -32,10 +32,5 @@ let package = Package(
             dependencies: ["ChuckerIOS"],
             path: "iOSApp"
         ),
-        .testTarget(
-            name: "ChuckerIOSTests",
-            dependencies: ["ChuckerIOS"],
-            path: "Tests/ChuckerIOSTests"
-        ),
     ]
 )
