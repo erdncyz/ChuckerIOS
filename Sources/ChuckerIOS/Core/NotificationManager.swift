@@ -83,14 +83,24 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         
+        print("🔔 ChuckerIOS: Notification received")
+        print("🔔 Action ID: \(response.actionIdentifier)")
+        print("🔔 UserInfo: \(userInfo)")
+        
         if response.actionIdentifier == "SHOW_CHUCKERIOS" || 
-           userInfo["action"] as? String == "show_chuckerios" {
+           userInfo["action"] as? String == "show_chuckerios" ||
+           response.actionIdentifier == UNNotificationDefaultActionIdentifier {
             
-            print("ChuckerIOS: Notification tapped - showing UI")
+            print("🔔 ChuckerIOS: Notification tapped - showing UI")
+            NSLog("🔔 ChuckerIOS: Notification tapped - showing UI")
             
             DispatchQueue.main.async {
+                print("🔔 ChuckerIOS: About to call show()")
                 ChuckerIOS.shared.show()
+                print("🔔 ChuckerIOS: show() called")
             }
+        } else {
+            print("🔔 ChuckerIOS: Notification action not recognized")
         }
         
         completionHandler()

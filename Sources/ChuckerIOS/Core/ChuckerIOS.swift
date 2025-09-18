@@ -65,19 +65,30 @@ public class ChuckerIOS {
     /// Show the ChuckerIOS UI
     public func show() {
         log("Showing ChuckerIOS UI", level: .info)
+        print("🔔 ChuckerIOS: show() method called")
+        NSLog("🔔 ChuckerIOS: show() method called")
         
         DispatchQueue.main.async {
+            print("🔔 ChuckerIOS: In main queue")
             guard let topViewController = self.getTopViewController() else {
                 self.log("Could not find top view controller to present ChuckerIOS UI", level: .error)
+                print("🔔 ChuckerIOS: ERROR - No top view controller found")
+                NSLog("🔔 ChuckerIOS: ERROR - No top view controller found")
                 return
             }
+            
+            print("🔔 ChuckerIOS: Top view controller found: \(type(of: topViewController))")
+            NSLog("🔔 ChuckerIOS: Top view controller found: \(type(of: topViewController))")
             
             let chuckerVC = ChuckerIOSViewController()
             let navController = UINavigationController(rootViewController: chuckerVC)
             navController.modalPresentationStyle = .fullScreen
             
+            print("🔔 ChuckerIOS: About to present UI")
             topViewController.present(navController, animated: true) {
                 self.log("ChuckerIOS UI presented successfully", level: .info)
+                print("🔔 ChuckerIOS: UI presented successfully")
+                NSLog("🔔 ChuckerIOS: UI presented successfully")
             }
         }
     }
