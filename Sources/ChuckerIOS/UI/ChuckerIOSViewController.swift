@@ -63,6 +63,10 @@ public class ChuckerIOSViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(TransactionCell.self, forCellReuseIdentifier: "TransactionCell")
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 80
+        tableView.separatorStyle = .singleLine
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
@@ -255,6 +259,21 @@ class TransactionCell: UITableViewCell {
         // Add duration if available
         if let duration = transaction.duration {
             timeLabel.text = "\(timeLabel.text!) • \(String(format: "%.3fs", duration))"
+        }
+        
+        // Set background color based on status
+        if let error = transaction.error {
+            backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+        } else if let response = transaction.response {
+            if response.statusCode >= 200 && response.statusCode < 300 {
+                backgroundColor = UIColor.systemGreen.withAlphaComponent(0.1)
+            } else if response.statusCode >= 400 {
+                backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
+            } else {
+                backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
+            }
+        } else {
+            backgroundColor = UIColor.systemOrange.withAlphaComponent(0.1)
         }
     }
 }

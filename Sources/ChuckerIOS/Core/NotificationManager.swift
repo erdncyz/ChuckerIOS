@@ -22,19 +22,21 @@ public class NotificationManager: NSObject {
     public func showNotification(for transaction: HTTPTransaction) {
         guard configuration.showNotifications else { return }
         
+        // Get current transaction count
+        let transactionCount = ChuckerIOS.shared.getAllTransactions().count
+        
         let content = UNMutableNotificationContent()
-        content.title = configuration.notificationTitle ?? "🌐 Network Request"
-        content.body = "\(transaction.request.method) \(transaction.request.url)"
+        content.title = "🌐 ChuckerIOS Network Monitor"
+        content.body = "\(transactionCount) network request(s) captured"
         content.sound = .default
         content.userInfo = [
-            "transaction_id": transaction.id,
             "action": "show_chuckerios"
         ]
         
         // Add action button
         let showAction = UNNotificationAction(
             identifier: "SHOW_CHUCKERIOS",
-            title: "View Details",
+            title: "View All Requests",
             options: [.foreground]
         )
         
@@ -48,8 +50,9 @@ public class NotificationManager: NSObject {
         notificationCenter.setNotificationCategories([category])
         content.categoryIdentifier = "CHUCKERIOS_CATEGORY"
         
+        // Use a single notification ID to update the same notification
         let request = UNNotificationRequest(
-            identifier: "chuckerios_\(transaction.id)",
+            identifier: "chuckerios_network_monitor",
             content: content,
             trigger: nil
         )
@@ -58,7 +61,7 @@ public class NotificationManager: NSObject {
             if let error = error {
                 print("ChuckerIOS: Failed to show notification: \(error)")
             } else {
-                print("ChuckerIOS: Notification shown for \(transaction.request.method) \(transaction.request.url)")
+                print("ChuckerIOS: Notification updated - \(transactionCount) requests captured")
             }
         }
     }

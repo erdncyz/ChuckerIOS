@@ -172,7 +172,7 @@ extension ChuckerIOS: URLSessionInterceptorDelegate {
             )
         }
         
-        // Show notification if enabled
+        // Show/update notification if enabled
         if configuration.showNotifications {
             notificationManager?.showNotification(for: transaction)
         }
