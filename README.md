@@ -7,6 +7,21 @@ ChuckerIOS is an iOS library that allows you to inspect and debug HTTP requests 
 
 ChuckerIOS, uygulamanızın yaptığı HTTP isteklerini incelemenizi ve debug etmenizi sağlayan bir iOS kütüphanesidir. Android için popüler olan [Chucker](https://github.com/ChuckerTeam/chucker) kütüphanesinden ilham alınmıştır.
 
+## 🚀 Current Status / Mevcut Durum
+
+**✅ Working Features / Çalışan Özellikler:**
+- 📦 **Core Library** - HTTP transaction models and storage
+- 🔧 **Configuration System** - Flexible configuration options
+- 💾 **Transaction Storage** - In-memory storage with filtering
+- 🔔 **Notification Manager** - Local notifications (basic)
+- 🌐 **Cross-Platform Support** - Works on iOS and macOS
+
+**🚧 In Development / Geliştirme Aşamasında:**
+- 🎨 **UI Components** - Storyboard-based interface
+- 🔄 **Method Swizzling** - Real URLSession interception
+- 🎯 **Floating Button** - Quick access button
+- 📱 **Demo App** - Complete example application
+
 ## Features / Özellikler
 
 - 📱 **Real-time HTTP monitoring** - See all network requests as they happen  
