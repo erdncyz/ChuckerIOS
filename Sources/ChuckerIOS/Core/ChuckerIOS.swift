@@ -163,6 +163,15 @@ extension ChuckerIOS: URLSessionInterceptorDelegate {
         // Store transaction
         storage?.store(transaction)
         
+        // Post notification for UI updates
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: NSNotification.Name("ChuckerIOSTransactionCaptured"),
+                object: nil,
+                userInfo: ["transaction": transaction]
+            )
+        }
+        
         // Show notification if enabled
         if configuration.showNotifications {
             notificationManager?.showNotification(for: transaction)

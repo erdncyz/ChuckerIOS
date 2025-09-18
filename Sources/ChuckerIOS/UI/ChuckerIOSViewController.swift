@@ -12,19 +12,22 @@ public class ChuckerIOSViewController: UIViewController {
     
     // MARK: - Data
     private var transactions: [HTTPTransaction] = []
-    private var logs: [String] = []
     
     // MARK: - Lifecycle
     public override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         loadData()
-        startLogMonitoring()
+        setupNotificationObserver()
     }
     
     public override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         loadData()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
     
     // MARK: - UI Setup
@@ -42,7 +45,12 @@ public class ChuckerIOSViewController: UIViewController {
         refreshButton.title = "🔄"
         refreshButton.target = self
         refreshButton.action = #selector(refreshData)
-        navigationItem.rightBarButtonItem = refreshButton
+        
+        clearButton.title = "🗑️"
+        clearButton.target = self
+        clearButton.action = #selector(clearData)
+        
+        navigationItem.rightBarButtonItems = [refreshButton, clearButton]
         
         // Status label
         statusLabel.text = "Loading network data..."
@@ -54,7 +62,6 @@ public class ChuckerIOSViewController: UIViewController {
         // Table view setup
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.register(NetworkLogCell.self, forCellReuseIdentifier: "NetworkLogCell")
         tableView.register(TransactionCell.self, forCellReuseIdentifier: "TransactionCell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
@@ -87,12 +94,18 @@ public class ChuckerIOSViewController: UIViewController {
         statusLabel.text = "📊 Total: \(totalTransactions) | ✅ Success: \(successCount) | ❌ Errors: \(errorCount)"
     }
     
-    private func startLogMonitoring() {
-        // Monitor for new transactions
-        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.loadData()
-            }
+    private func setupNotificationObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(transactionCaptured),
+            name: NSNotification.Name("ChuckerIOSTransactionCaptured"),
+            object: nil
+        )
+    }
+    
+    @objc private func transactionCaptured(_ notification: Notification) {
+        DispatchQueue.main.async {
+            self.loadData()
         }
     }
     
@@ -105,43 +118,42 @@ public class ChuckerIOSViewController: UIViewController {
         loadData()
         tableView.reloadData()
     }
+    
+    @objc private func clearData() {
+        let alert = UIAlertController(
+            title: "Clear All Data",
+            message: "Are you sure you want to clear all network transactions?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Clear", style: .destructive) { _ in
+            ChuckerIOS.shared.clearTransactions()
+            self.loadData()
+        })
+        
+        present(alert, animated: true)
+    }
 }
 
 // MARK: - UITableViewDataSource
 extension ChuckerIOSViewController: UITableViewDataSource {
     public func numberOfSections(in tableView: UITableView) -> Int {
-        return 2 // Logs section and Transactions section
+        return 1 // Only Transactions section
     }
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch section {
-        case 0: return logs.count
-        case 1: return transactions.count
-        default: return 0
-        }
+        return transactions.count
     }
     
     public func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch section {
-        case 0: return "📝 Recent Logs"
-        case 1: return "🌐 Network Transactions"
-        default: return nil
-        }
+        return "🌐 Network Transactions (\(transactions.count))"
     }
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        switch indexPath.section {
-        case 0:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "NetworkLogCell", for: indexPath) as! NetworkLogCell
-            cell.configure(with: logs[indexPath.row])
-            return cell
-        case 1:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell", for: indexPath) as! TransactionCell
-            cell.configure(with: transactions[indexPath.row])
-            return cell
-        default:
-            return UITableViewCell()
-        }
+        let cell = tableView.dequeueReusableCell(withIdentifier: "TransactionCell", for: indexPath) as! TransactionCell
+        cell.configure(with: transactions[indexPath.row])
+        return cell
     }
 }
 
@@ -150,10 +162,8 @@ extension ChuckerIOSViewController: UITableViewDelegate {
     public func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        if indexPath.section == 1 {
-            let transaction = transactions[indexPath.row]
-            showTransactionDetail(transaction)
-        }
+        let transaction = transactions[indexPath.row]
+        showTransactionDetail(transaction)
     }
     
     private func showTransactionDetail(_ transaction: HTTPTransaction) {
@@ -164,37 +174,6 @@ extension ChuckerIOSViewController: UITableViewDelegate {
 }
 
 // MARK: - Custom Cells
-class NetworkLogCell: UITableViewCell {
-    private let logLabel = UILabel()
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        setupUI()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        logLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
-        logLabel.numberOfLines = 0
-        logLabel.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(logLabel)
-        
-        NSLayoutConstraint.activate([
-            logLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            logLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            logLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            logLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8)
-        ])
-    }
-    
-    func configure(with log: String) {
-        logLabel.text = log
-    }
-}
-
 class TransactionCell: UITableViewCell {
     private let methodLabel = UILabel()
     private let urlLabel = UILabel()
@@ -252,8 +231,17 @@ class TransactionCell: UITableViewCell {
             statusLabel.text = "❌ Error"
             statusLabel.textColor = .systemRed
         } else if let response = transaction.response {
-            statusLabel.text = "✅ \(response.statusCode)"
-            statusLabel.textColor = .systemGreen
+            let statusCode = response.statusCode
+            if statusCode >= 200 && statusCode < 300 {
+                statusLabel.text = "✅ \(statusCode)"
+                statusLabel.textColor = .systemGreen
+            } else if statusCode >= 400 {
+                statusLabel.text = "❌ \(statusCode)"
+                statusLabel.textColor = .systemRed
+            } else {
+                statusLabel.text = "⚠️ \(statusCode)"
+                statusLabel.textColor = .systemOrange
+            }
         } else {
             statusLabel.text = "⏳ Pending"
             statusLabel.textColor = .systemOrange
@@ -263,6 +251,11 @@ class TransactionCell: UITableViewCell {
         formatter.dateStyle = .none
         formatter.timeStyle = .medium
         timeLabel.text = formatter.string(from: transaction.timestamp)
+        
+        // Add duration if available
+        if let duration = transaction.duration {
+            timeLabel.text = "\(timeLabel.text!) • \(String(format: "%.3fs", duration))"
+        }
     }
 }
 

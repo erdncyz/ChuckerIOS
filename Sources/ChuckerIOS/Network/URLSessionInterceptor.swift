@@ -117,8 +117,8 @@ class ChuckerURLProtocol: URLProtocol {
                 duration: duration
             )
             
-            // Notify interceptor
-            ChuckerIOS.shared.interceptor?.delegate?.interceptor(ChuckerIOS.shared.interceptor!, didCapture: transaction)
+            // Notify ChuckerIOS directly
+            ChuckerIOS.shared.interceptor(ChuckerIOS.shared.interceptor!, didCapture: transaction)
             
             // Add visible capture message
             print("📡📡📡 ChuckerIOS CAPTURED: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "unknown") 📡📡📡")
