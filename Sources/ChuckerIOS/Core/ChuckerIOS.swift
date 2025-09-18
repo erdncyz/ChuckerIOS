@@ -107,6 +107,25 @@ public class ChuckerIOS {
         storage?.clearAll()
     }
     
+    // MARK: - Logging
+    
+    private func log(_ message: String, level: LogLevel = .info) {
+        let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+        let logMessage = "ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)"
+        
+        // Always print to console
+        print(logMessage)
+        
+        // Also use NSLog for better visibility on device
+        NSLog(logMessage)
+        
+        // For debug builds, also use os_log for system logging
+        #if DEBUG
+        let logger = OSLog(subsystem: "com.chuckerios", category: "network")
+        os_log("%{public}@", log: logger, type: .default, logMessage)
+        #endif
+    }
+    
     private func setupComponents() {
         log("Setting up ChuckerIOS components", level: .debug)
         
@@ -163,21 +182,4 @@ internal enum LogLevel: String {
     case info = "INFO"
     case warning = "WARNING"
     case error = "ERROR"
-}
-
-internal func log(_ message: String, level: LogLevel = .info) {
-    let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-    let logMessage = "ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)"
-    
-    // Always print to console
-    print(logMessage)
-    
-    // Also use NSLog for better visibility on device
-    NSLog(logMessage)
-    
-    // For debug builds, also use os_log for system logging
-    #if DEBUG
-    let logger = OSLog(subsystem: "com.chuckerios", category: "network")
-    os_log("%{public}@", log: logger, type: .default, logMessage)
-    #endif
 }

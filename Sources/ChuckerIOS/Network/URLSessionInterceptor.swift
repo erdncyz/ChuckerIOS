@@ -154,4 +154,13 @@ class ChuckerURLProtocol: URLProtocol {
 
 // MARK: - Logging
 
-// Logging functions are now in ChuckerIOS.swift
+private func log(_ message: String, level: LogLevel = .info) {
+    let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
+    let logMessage = "ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)"
+    
+    // Always print to console
+    print(logMessage)
+    
+    // Also use NSLog for better visibility on device
+    NSLog(logMessage)
+}
