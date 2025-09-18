@@ -1,13 +1,13 @@
 import Foundation
 import ChuckerIOS
 
-// iOS Test App - ChuckerIOS kütüphanesini test eder
+// iOS Test App - Tests the ChuckerIOS library
 class iOSApp {
     
     static func run() {
-        print("🚀 ChuckerIOS iOS Test App Başlatılıyor...")
+        print("🚀 ChuckerIOS iOS Test App Starting...")
         
-        // ChuckerIOS'u yapılandır
+        // Configure ChuckerIOS
         let configuration = ChuckerConfiguration(
             showNotifications: true,
             redactHeaders: ["Authorization", "Cookie"],
@@ -19,19 +19,19 @@ class iOSApp {
         ChuckerIOS.shared.configure(with: configuration)
         ChuckerIOS.shared.start()
         
-        print("✅ ChuckerIOS yapılandırıldı ve başlatıldı")
+        print("✅ ChuckerIOS configured and started")
         
-        // Test istekleri yap
+        // Make test requests
         makeTestRequests()
         
-        // Sonuçları göster
+        // Show results
         showResults()
     }
     
     private static func makeTestRequests() {
-        print("\n📡 iOS Test istekleri yapılıyor...")
+        print("\n📡 Making iOS test requests...")
         
-        // Test URL'leri
+        // Test URLs
         let testURLs = [
             "https://httpbin.org/get",
             "https://httpbin.org/post",
@@ -60,68 +60,68 @@ class iOSApp {
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
                 DispatchQueue.main.async {
                     if let error = error {
-                        print("❌ iOS İstek başarısız: \(urlString) - \(error.localizedDescription)")
+                        print("❌ iOS Request failed: \(urlString) - \(error.localizedDescription)")
                     } else {
-                        print("✅ iOS İstek başarılı: \(urlString)")
+                        print("✅ iOS Request successful: \(urlString)")
                     }
                 }
             }
             
             task.resume()
             
-            // İstekler arasında kısa bekleme
+            // Short delay between requests
             Thread.sleep(forTimeInterval: 0.5)
         }
         
-        // İsteklerin tamamlanması için bekleme
+        // Wait for requests to complete
         Thread.sleep(forTimeInterval: 3.0)
     }
     
     private static func showResults() {
-        print("\n📊 iOS Test Sonuçları:")
-        print("======================")
+        print("\n📊 iOS Test Results:")
+        print("===================")
         
         let transactions = ChuckerIOS.shared.getAllTransactions()
-        print("📈 Toplam yakalanan istek sayısı: \(transactions.count)")
+        print("📈 Total captured requests: \(transactions.count)")
         
         if transactions.isEmpty {
-            print("⚠️  Henüz hiç istek yakalanmadı")
-            print("💡 Method swizzling henüz implement edilmedi")
+            print("⚠️  No requests captured yet")
+            print("💡 Method swizzling not implemented yet")
             return
         }
         
-        print("\n📋 Yakalanan İstekler:")
+        print("\n📋 Captured Requests:")
         for (index, transaction) in transactions.enumerated() {
             print("\(index + 1). \(transaction.request.method) \(transaction.request.url)")
-            print("   📅 Zaman: \(transaction.timestamp)")
-            print("   ⏱️  Süre: \(transaction.duration ?? 0)ms")
+            print("   📅 Time: \(transaction.timestamp)")
+            print("   ⏱️  Duration: \(transaction.duration ?? 0)ms")
             if let error = transaction.error {
-                print("   ❌ Hata: \(error.message)")
+                print("   ❌ Error: \(error.message)")
             } else {
-                print("   ✅ Başarılı")
+                print("   ✅ Success")
             }
             print("")
         }
         
-        // Filtreleme testleri
-        print("🔍 Filtreleme Testleri:")
-        print("=====================")
+        // Filtering tests
+        print("🔍 Filtering Tests:")
+        print("==================")
         
         let getRequests = ChuckerIOS.shared.storage?.getTransactions(filteredByMethod: "GET") ?? []
-        print("📥 GET istekleri: \(getRequests.count)")
+        print("📥 GET requests: \(getRequests.count)")
         
         let postRequests = ChuckerIOS.shared.storage?.getTransactions(filteredByMethod: "POST") ?? []
-        print("📤 POST istekleri: \(postRequests.count)")
+        print("📤 POST requests: \(postRequests.count)")
         
         let errorRequests = ChuckerIOS.shared.storage?.getErrorTransactions() ?? []
-        print("❌ Hatalı istekler: \(errorRequests.count)")
+        print("❌ Error requests: \(errorRequests.count)")
         
-        print("\n🎉 iOS Test tamamlandı!")
-        print("💡 ChuckerIOS kütüphanesi iOS'ta başarıyla çalışıyor!")
+        print("\n🎉 iOS Test completed!")
+        print("💡 ChuckerIOS library is working successfully on iOS!")
     }
 }
 
-// iOS Test uygulamasını çalıştır
+// Run the iOS test application
 @main
 struct iOSAppMain {
     static func main() {
