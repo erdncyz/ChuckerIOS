@@ -34,7 +34,7 @@ ChuckerIOS, uygulamanızın yaptığı HTTP isteklerini incelemenizi ve debug et
 
 1. **Xcode'da projenizi açın**
 2. **File > Add Package Dependencies** menüsüne gidin
-3. Repository URL'ini girin: `https://github.com/yourusername/ChuckerIOS.git`
+3. Repository URL'ini girin: `https://github.com/erdncyz/ChuckerIOS.git`
 4. **Add Package** butonuna tıklayın
 5. Versiyonu seçin (genellikle en son stable version)
 6. Target'ınızı seçin ve **Add Package** butonuna tıklayın
@@ -45,7 +45,7 @@ Eğer Package.swift dosyanız varsa, dependencies bölümüne ekleyin:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ChuckerIOS.git", from: "1.0.0")
+    .package(url: "https://github.com/erdncyz/ChuckerIOS.git", from: "1.0.0")
 ],
 targets: [
     .target(
@@ -59,7 +59,7 @@ targets: [
 
 #### 1. Repository'yi Clone Edin:
 ```bash
-git clone https://github.com/yourusername/ChuckerIOS.git
+git clone https://github.com/erdncyz/ChuckerIOS.git
 ```
 
 #### 2. Xcode Projesine Ekleme:
@@ -84,7 +84,7 @@ git clone https://github.com/yourusername/ChuckerIOS.git
 
 Podfile'ınıza ekleyin:
 ```ruby
-pod 'ChuckerIOS', :git => 'https://github.com/yourusername/ChuckerIOS.git'
+pod 'ChuckerIOS', :git => 'https://github.com/erdncyz/ChuckerIOS.git'
 ```
 
 Sonra:
@@ -96,7 +96,7 @@ pod install
 
 Cartfile'ınıza ekleyin:
 ```
-github "yourusername/ChuckerIOS"
+github "erdncyz/ChuckerIOS"
 ```
 
 Sonra:
@@ -469,7 +469,7 @@ ChuckerIOS.shared.stop()
 
 Sorun yaşıyorsanız veya sorularınız varsa:
 
-1. [Issues](https://github.com/yourusername/ChuckerIOS/issues) sayfasını kontrol edin
+1. [Issues](https://github.com/erdncyz/ChuckerIOS/issues) sayfasını kontrol edin
 2. Detaylı bilgi ile yeni bir issue oluşturun
 3. iOS versiyonu, Xcode versiyonu ve adımları dahil edin
 
