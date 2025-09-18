@@ -158,14 +158,14 @@ extension ChuckerIOS: URLSessionInterceptorDelegate {
 
 // MARK: - Logging
 
-private enum LogLevel: String {
+internal enum LogLevel: String {
     case debug = "DEBUG"
     case info = "INFO"
     case warning = "WARNING"
     case error = "ERROR"
 }
 
-private func log(_ message: String, level: LogLevel = .info) {
+internal func log(_ message: String, level: LogLevel = .info) {
     let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
     let logMessage = "ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)"
     

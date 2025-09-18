@@ -154,14 +154,4 @@ class ChuckerURLProtocol: URLProtocol {
 
 // MARK: - Logging
 
-private enum LogLevel: String {
-    case debug = "DEBUG"
-    case info = "INFO"
-    case warning = "WARNING"
-    case error = "ERROR"
-}
-
-private func log(_ message: String, level: LogLevel = .info) {
-    let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-    print("ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)")
-}
+// Logging functions are now in ChuckerIOS.swift
