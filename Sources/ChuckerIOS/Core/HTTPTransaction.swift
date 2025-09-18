@@ -94,6 +94,56 @@ extension Data {
     }
 }
 
+extension HTTPRequest {
+    /// Create HTTPRequest from URLRequest
+    public init(from urlRequest: URLRequest) {
+        self.method = urlRequest.httpMethod ?? "GET"
+        self.url = urlRequest.url?.absoluteString ?? ""
+        
+        var headers: [String: String] = [:]
+        if let urlHeaders = urlRequest.allHTTPHeaderFields {
+            headers = urlHeaders
+        }
+        self.headers = headers
+        self.body = urlRequest.httpBody
+        self.bodyString = urlRequest.httpBody?.stringValue
+    }
+}
+
+extension HTTPResponse {
+    /// Create HTTPResponse from URLResponse
+    public init(from urlResponse: URLResponse, data: Data?) {
+        if let httpResponse = urlResponse as? HTTPURLResponse {
+            self.statusCode = httpResponse.statusCode
+            
+            var headers: [String: String] = [:]
+            for (key, value) in httpResponse.allHeaderFields {
+                if let keyString = key as? String, let valueString = value as? String {
+                    headers[keyString] = valueString
+                }
+            }
+            self.headers = headers
+        } else {
+            self.statusCode = 200
+            self.headers = [:]
+        }
+        
+        self.body = data
+        self.bodyString = data?.stringValue
+        self.mimeType = urlResponse.mimeType
+    }
+}
+
+extension HTTPError {
+    /// Create HTTPError from Error
+    public init(from error: Error) {
+        let nsError = error as NSError
+        self.code = nsError.code
+        self.message = nsError.localizedDescription
+        self.domain = nsError.domain
+    }
+}
+
 extension HTTPTransaction {
     /// Returns a user-friendly status description
     public var statusDescription: String {

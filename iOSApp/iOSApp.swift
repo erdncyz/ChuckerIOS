@@ -58,12 +58,18 @@ class iOSApp {
             }
             
             let task = URLSession.shared.dataTask(with: request) { data, response, error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        print("❌ iOS Request failed: \(urlString) - \(error.localizedDescription)")
-                    } else {
-                        print("✅ iOS Request successful: \(urlString)")
-                    }
+                // Manually capture the transaction since method swizzling isn't fully implemented
+                ChuckerIOS.shared.interceptor?.captureTransaction(
+                    request: request,
+                    response: response,
+                    data: data,
+                    error: error
+                )
+                
+                if let error = error {
+                    print("❌ iOS Request failed: \(urlString) - \(error.localizedDescription)")
+                } else {
+                    print("✅ iOS Request successful: \(urlString)")
                 }
             }
             
