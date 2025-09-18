@@ -281,6 +281,7 @@ class TransactionCell: UITableViewCell {
 // MARK: - Transaction Detail ViewController
 class TransactionDetailViewController: UIViewController {
     private let transaction: HTTPTransaction
+    private let segmentedControl = UISegmentedControl(items: ["Request", "Response", "Headers"])
     private let textView = UITextView()
     
     init(transaction: HTTPTransaction) {
@@ -308,46 +309,86 @@ class TransactionDetailViewController: UIViewController {
             action: #selector(dismissViewController)
         )
         
-        textView.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        // Segmented control
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(segmentedControl)
+        
+        // Text view
+        textView.font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
         textView.isEditable = false
         textView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textView)
         
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            
+            textView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 16),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -16)
         ])
+    }
+    
+    @objc private func segmentChanged() {
+        displayTransactionDetails()
     }
     
     private func displayTransactionDetails() {
         var details = ""
         
-        details += "🌐 REQUEST\n"
-        details += "Method: \(transaction.request.method)\n"
-        details += "URL: \(transaction.request.url)\n"
-        details += "Headers: \(transaction.request.headers)\n"
-        if let body = transaction.request.body {
-            details += "Body: \(body)\n"
-        }
-        details += "\n"
-        
-        if let response = transaction.response {
-            details += "📡 RESPONSE\n"
-            details += "Status: \(response.statusCode)\n"
-            details += "Headers: \(response.headers)\n"
-            if let body = response.body {
-                details += "Body: \(body)\n"
+        switch segmentedControl.selectedSegmentIndex {
+        case 0: // Request
+            details += "🌐 REQUEST\n"
+            details += "Method: \(transaction.request.method)\n"
+            details += "URL: \(transaction.request.url)\n\n"
+            
+            details += "📝 REQUEST BODY:\n"
+            if let bodyString = transaction.request.bodyString, !bodyString.isEmpty {
+                details += bodyString
+            } else {
+                details += "No request body"
             }
-            details += "\n"
-        }
-        
-        if let error = transaction.error {
-            details += "❌ ERROR\n"
-            details += "Message: \(error.message)\n"
-            details += "Code: \(error.code)\n"
-            details += "\n"
+            
+        case 1: // Response
+            details += "📥 RESPONSE\n"
+            if let response = transaction.response {
+                details += "Status: \(response.statusCode)\n"
+                details += "MIME Type: \(response.mimeType ?? "Unknown")\n\n"
+                
+                details += "📝 RESPONSE BODY:\n"
+                if let bodyString = response.bodyString, !bodyString.isEmpty {
+                    details += bodyString
+                } else {
+                    details += "No response body"
+                }
+            } else if let error = transaction.error {
+                details += "❌ ERROR\n"
+                details += "Code: \(error.code)\n"
+                details += "Message: \(error.message)\n"
+                details += "Domain: \(error.domain)\n"
+            } else {
+                details += "⏳ Pending response..."
+            }
+            
+        case 2: // Headers
+            details += "📋 REQUEST HEADERS:\n"
+            for (key, value) in transaction.request.headers {
+                details += "\(key): \(value)\n"
+            }
+            
+            if let response = transaction.response {
+                details += "\n📋 RESPONSE HEADERS:\n"
+                for (key, value) in response.headers {
+                    details += "\(key): \(value)\n"
+                }
+            }
+            
+        default:
+            break
         }
         
         details += "⏰ TIMESTAMP: \(transaction.timestamp)\n"

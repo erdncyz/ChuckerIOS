@@ -20,6 +20,9 @@ public class URLSessionInterceptor: NSObject {
         
         // Register URLProtocol immediately to ensure early interception
         URLProtocol.registerClass(ChuckerURLProtocol.self)
+        
+        // Note: Using URLProtocol approach for now
+        
         log("URLSessionInterceptor initialized and URLProtocol registered", level: .info)
         
         // Add visible startup message
@@ -81,11 +84,16 @@ class ChuckerURLProtocol: URLProtocol {
         guard let scheme = request.url?.scheme else { return false }
         guard scheme == "http" || scheme == "https" else { return false }
         
+        // Skip ChuckerIOS's own requests to avoid infinite loops
+        if let url = request.url?.absoluteString, url.contains("chuckerios") {
+            return false
+        }
+        
         // Log when we're checking a request
         log("🔍 ChuckerIOS: Checking request: \(request.url?.absoluteString ?? "unknown")", level: .debug)
         
         // Always intercept when ChuckerIOS is available (don't check isIntercepting flag)
-        // This ensures we capture all requests
+        // This ensures we capture all requests including Alamofire
         return true
     }
     
@@ -164,3 +172,4 @@ private func log(_ message: String, level: LogLevel = .info) {
     // Also use NSLog for better visibility on device
     NSLog(logMessage)
 }
+
