@@ -45,6 +45,10 @@ public class ChuckerIOS {
         setupComponents()
         interceptor?.startIntercepting()
         log("ChuckerIOS network monitoring started successfully", level: .info)
+        
+        // Add a very visible startup message
+        print("🚀🚀🚀 ChuckerIOS is now ACTIVE and monitoring network requests! 🚀🚀🚀")
+        NSLog("🚀🚀🚀 ChuckerIOS is now ACTIVE and monitoring network requests! 🚀🚀🚀")
     }
     
     /// Stop monitoring network requests
@@ -130,5 +134,18 @@ private enum LogLevel: String {
 
 private func log(_ message: String, level: LogLevel = .info) {
     let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
-    print("ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)")
+    let logMessage = "ChuckerIOS [\(timestamp)] \(level.rawValue): \(message)"
+    
+    // Always print to console
+    print(logMessage)
+    
+    // Also use NSLog for better visibility on device
+    NSLog(logMessage)
+    
+    // For debug builds, also use os_log for system logging
+    #if DEBUG
+    import os.log
+    let logger = OSLog(subsystem: "com.chuckerios", category: "network")
+    os_log("%{public}@", log: logger, type: .default, logMessage)
+    #endif
 }

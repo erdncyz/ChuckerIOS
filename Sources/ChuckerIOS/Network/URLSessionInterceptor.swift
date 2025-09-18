@@ -21,6 +21,10 @@ public class URLSessionInterceptor: NSObject {
         // Register URLProtocol immediately to ensure early interception
         URLProtocol.registerClass(ChuckerURLProtocol.self)
         log("URLSessionInterceptor initialized and URLProtocol registered", level: .info)
+        
+        // Add visible startup message
+        print("🌐🌐🌐 URLSessionInterceptor is READY to capture network requests! 🌐🌐🌐")
+        NSLog("🌐🌐🌐 URLSessionInterceptor is READY to capture network requests! 🌐🌐🌐")
     }
     
     /// Start intercepting URLSession requests
@@ -115,6 +119,10 @@ class ChuckerURLProtocol: URLProtocol {
             
             // Notify interceptor
             ChuckerIOS.shared.interceptor?.delegate?.interceptor(ChuckerIOS.shared.interceptor!, didCapture: transaction)
+            
+            // Add visible capture message
+            print("📡📡📡 ChuckerIOS CAPTURED: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "unknown") 📡📡📡")
+            NSLog("📡📡📡 ChuckerIOS CAPTURED: \(request.httpMethod ?? "GET") \(request.url?.absoluteString ?? "unknown") 📡📡📡")
             
             // Forward the response to the original client
             if let response = response {
