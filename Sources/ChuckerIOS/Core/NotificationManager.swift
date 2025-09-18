@@ -1,20 +1,104 @@
 import Foundation
+import UserNotifications
+import UIKit
 
 /// Manages local notifications for network activity
-public class NotificationManager {
+public class NotificationManager: NSObject {
     
     private let configuration: ChuckerConfiguration
+    private let notificationCenter = UNUserNotificationCenter.current()
     
     public init(configuration: ChuckerConfiguration) {
         self.configuration = configuration
+        super.init()
+        setupNotificationCenter()
         print("ChuckerIOS: NotificationManager initialized")
     }
     
+    private func setupNotificationCenter() {
+        notificationCenter.delegate = self
+    }
+    
     public func showNotification(for transaction: HTTPTransaction) {
-        print("ChuckerIOS: Notification for \(transaction.request.method) \(transaction.request.url)")
+        guard configuration.showNotifications else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = configuration.notificationTitle ?? "🌐 Network Request"
+        content.body = "\(transaction.request.method) \(transaction.request.url)"
+        content.sound = .default
+        content.userInfo = [
+            "transaction_id": transaction.id,
+            "action": "show_chuckerios"
+        ]
+        
+        // Add action button
+        let showAction = UNNotificationAction(
+            identifier: "SHOW_CHUCKERIOS",
+            title: "View Details",
+            options: [.foreground]
+        )
+        
+        let category = UNNotificationCategory(
+            identifier: "CHUCKERIOS_CATEGORY",
+            actions: [showAction],
+            intentIdentifiers: [],
+            options: []
+        )
+        
+        notificationCenter.setNotificationCategories([category])
+        content.categoryIdentifier = "CHUCKERIOS_CATEGORY"
+        
+        let request = UNNotificationRequest(
+            identifier: "chuckerios_\(transaction.id)",
+            content: content,
+            trigger: nil
+        )
+        
+        notificationCenter.add(request) { error in
+            if let error = error {
+                print("ChuckerIOS: Failed to show notification: \(error)")
+            } else {
+                print("ChuckerIOS: Notification shown for \(transaction.request.method) \(transaction.request.url)")
+            }
+        }
     }
     
     public func clearAllNotifications() {
-        print("ChuckerIOS: Clear notifications called")
+        notificationCenter.removeAllPendingNotificationRequests()
+        notificationCenter.removeAllDeliveredNotifications()
+        print("ChuckerIOS: All notifications cleared")
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+extension NotificationManager: UNUserNotificationCenterDelegate {
+    
+    public func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        if response.actionIdentifier == "SHOW_CHUCKERIOS" || 
+           userInfo["action"] as? String == "show_chuckerios" {
+            
+            print("ChuckerIOS: Notification tapped - showing UI")
+            
+            DispatchQueue.main.async {
+                ChuckerIOS.shared.show()
+            }
+        }
+        
+        completionHandler()
+    }
+    
+    public func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notification even when app is in foreground
+        completionHandler([.banner, .sound])
     }
 }

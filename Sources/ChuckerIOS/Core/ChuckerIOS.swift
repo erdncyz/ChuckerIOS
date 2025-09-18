@@ -61,7 +61,37 @@ public class ChuckerIOS {
     
     /// Show the ChuckerIOS UI
     public func show() {
-        print("ChuckerIOS: UI not available in this build")
+        log("Showing ChuckerIOS UI", level: .info)
+        
+        DispatchQueue.main.async {
+            guard let topViewController = self.getTopViewController() else {
+                self.log("Could not find top view controller to present ChuckerIOS UI", level: .error)
+                return
+            }
+            
+            let chuckerVC = ChuckerIOSViewController()
+            let navController = UINavigationController(rootViewController: chuckerVC)
+            navController.modalPresentationStyle = .fullScreen
+            
+            topViewController.present(navController, animated: true) {
+                self.log("ChuckerIOS UI presented successfully", level: .info)
+            }
+        }
+    }
+    
+    /// Get the top view controller for presenting UI
+    private func getTopViewController() -> UIViewController? {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return nil
+        }
+        
+        var topController = window.rootViewController
+        while let presentedController = topController?.presentedViewController {
+            topController = presentedController
+        }
+        
+        return topController
     }
     
     /// Get all captured transactions
