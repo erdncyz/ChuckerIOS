@@ -1,8 +1,8 @@
 import Foundation
 import UserNotifications
-import UIKit
 
 /// Manages local notifications for network activity
+@available(iOS 10.0, macOS 10.14, *)
 public class NotificationManager: NSObject {
     
     private let configuration: ChuckerConfiguration
@@ -16,21 +16,30 @@ public class NotificationManager: NSObject {
     }
     
     private func setupNotificationCenter() {
-        notificationCenter.delegate = self
+        // Note: AppDelegate handles notification delegate to avoid conflicts
+        // notificationCenter.delegate = self
     }
     
+    @available(iOS 10.0, macOS 10.14, *)
     public func showNotification(for transaction: HTTPTransaction) {
         guard configuration.showNotifications else { return }
         
         // Get current transaction count
-        let transactionCount = ChuckerIOS.shared.getAllTransactions().count
+        let allTransactions = ChuckerIOS.shared.getAllTransactions()
+        let transactionCount = allTransactions.count
+        
+        // Create a more informative notification body
+        let method = transaction.request.method
+        let url = transaction.request.url
+        let domain = URL(string: url)?.host ?? "Unknown"
         
         let content = UNMutableNotificationContent()
         content.title = "🌐 ChuckerIOS Network Monitor"
-        content.body = "\(transactionCount) network request(s) captured"
+        content.body = "\(method) \(domain) • \(transactionCount) total requests"
         content.sound = .default
         content.userInfo = [
-            "action": "show_chuckerios"
+            "action": "show_chuckerios",
+            "transaction_count": transactionCount
         ]
         
         // Add action button
@@ -74,8 +83,10 @@ public class NotificationManager: NSObject {
 }
 
 // MARK: - UNUserNotificationCenterDelegate
+@available(iOS 10.0, macOS 10.14, *)
 extension NotificationManager: UNUserNotificationCenterDelegate {
     
+    @available(iOS 10.0, macOS 10.14, *)
     public func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -83,39 +94,59 @@ extension NotificationManager: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         
-        print("🔔 ChuckerIOS: Notification received")
+        print("🔔🔔🔔 ChuckerIOS: Notification received 🔔🔔🔔")
         print("🔔 Action ID: \(response.actionIdentifier)")
         print("🔔 UserInfo: \(userInfo)")
+        print("🔔 Default Action ID: \(UNNotificationDefaultActionIdentifier)")
+        NSLog("🔔🔔🔔 ChuckerIOS: Notification received - Action ID: \(response.actionIdentifier) 🔔🔔🔔")
+        NSLog("🔔 UserInfo: \(userInfo)")
         
-        if response.actionIdentifier == "SHOW_CHUCKERIOS" || 
-           userInfo["action"] as? String == "show_chuckerios" ||
-           response.actionIdentifier == UNNotificationDefaultActionIdentifier {
+        // Check all possible conditions
+        let isShowAction = response.actionIdentifier == "SHOW_CHUCKERIOS"
+        let isUserInfoAction = userInfo["action"] as? String == "show_chuckerios"
+        let isDefaultAction = response.actionIdentifier == UNNotificationDefaultActionIdentifier
+        
+        print("🔔 isShowAction: \(isShowAction)")
+        print("🔔 isUserInfoAction: \(isUserInfoAction)")
+        print("🔔 isDefaultAction: \(isDefaultAction)")
+        
+        if isShowAction || isUserInfoAction || isDefaultAction {
+            print("🔔🔔🔔 ChuckerIOS: Notification tapped - showing UI 🔔🔔🔔")
+            NSLog("🔔🔔🔔 ChuckerIOS: Notification tapped - showing UI 🔔🔔🔔")
             
-            print("🔔 ChuckerIOS: Notification tapped - showing UI")
-            NSLog("🔔 ChuckerIOS: Notification tapped - showing UI")
+            // Try immediate execution first
+            print("🔔 ChuckerIOS: Trying immediate show()")
+            ChuckerIOS.shared.show()
             
-            DispatchQueue.main.async {
-                print("🔔 ChuckerIOS: About to call show()")
+            // Also try with delay as backup
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                print("🔔 ChuckerIOS: Trying delayed show()")
+                NSLog("🔔 ChuckerIOS: Trying delayed show()")
                 ChuckerIOS.shared.show()
-                print("🔔 ChuckerIOS: show() called")
             }
         } else {
             print("🔔 ChuckerIOS: Notification action not recognized")
+            NSLog("🔔 ChuckerIOS: Notification action not recognized")
         }
         
         completionHandler()
     }
     
+    @available(iOS 10.0, macOS 10.14, *)
     public func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         // Show notification even when app is in foreground
+        #if os(iOS)
         if #available(iOS 14.0, *) {
             completionHandler([.banner, .sound])
         } else {
             completionHandler([.alert, .sound])
         }
+        #else
+        completionHandler([.alert, .sound])
+        #endif
     }
 }

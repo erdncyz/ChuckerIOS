@@ -1,5 +1,11 @@
+#if canImport(UIKit)
 import UIKit
+#endif
+#if canImport(UserNotifications)
 import UserNotifications
+#endif
+
+#if canImport(UIKit)
 
 /// ChuckerIOS UI ViewController for displaying network logs
 public class ChuckerIOSViewController: UIViewController {
@@ -403,3 +409,5 @@ class TransactionDetailViewController: UIViewController {
         dismiss(animated: true)
     }
 }
+
+#endif

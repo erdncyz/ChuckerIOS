@@ -19,12 +19,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // No external dependencies for now - keeping it lightweight
+        .package(url: "https://github.com/Alamofire/Alamofire.git", from: "5.8.0")
     ],
     targets: [
         .target(
             name: "ChuckerIOS",
-            dependencies: [],
+            dependencies: ["Alamofire"],
             path: "Sources/ChuckerIOS"
         ),
         .executableTarget(

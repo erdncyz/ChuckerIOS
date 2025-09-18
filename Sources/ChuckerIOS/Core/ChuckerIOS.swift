@@ -8,6 +8,7 @@ import UserNotifications
 #if DEBUG
 import os.log
 #endif
+import Alamofire
 
 /// Main ChuckerIOS class - entry point for the library
 public class ChuckerIOS {
@@ -21,11 +22,23 @@ public class ChuckerIOS {
     /// Network interceptor
     public private(set) var interceptor: URLSessionInterceptor?
     
+    /// Alamofire interceptor
+    public var alamofireInterceptor: ChuckerAlamofireInterceptor?
+    
+    /// Monitored Alamofire requests
+    public var monitoredRequests: [DataRequest] = []
+    
+    /// Custom Alamofire Session with ChuckerIOS EventMonitor
+    public var customSession: Session?
+    
+    /// Default Alamofire Session reference
+    public var defaultSession: Session?
+    
     /// Transaction storage
     public private(set) var storage: TransactionStorage?
     
     /// Notification manager
-    public private(set) var notificationManager: NotificationManager?
+    public private(set) var notificationManager: Any?
     
     /// Floating button manager (not available in this build)
     // public private(set) var floatingButtonManager: FloatingButtonManager?
@@ -48,10 +61,6 @@ public class ChuckerIOS {
         setupComponents()
         interceptor?.startIntercepting()
         log("ChuckerIOS network monitoring started successfully", level: .info)
-        
-        // Add a very visible startup message
-        print("🚀🚀🚀 ChuckerIOS is now ACTIVE and monitoring network requests! 🚀🚀🚀")
-        NSLog("🚀🚀🚀 ChuckerIOS is now ACTIVE and monitoring network requests! 🚀🚀🚀")
     }
     
     /// Stop monitoring network requests
@@ -65,31 +74,49 @@ public class ChuckerIOS {
     /// Show the ChuckerIOS UI
     public func show() {
         log("Showing ChuckerIOS UI", level: .info)
-        print("🔔 ChuckerIOS: show() method called")
-        NSLog("🔔 ChuckerIOS: show() method called")
         
+        #if canImport(UIKit)
         DispatchQueue.main.async {
-            print("🔔 ChuckerIOS: In main queue")
             guard let topViewController = self.getTopViewController() else {
                 self.log("Could not find top view controller to present ChuckerIOS UI", level: .error)
-                print("🔔 ChuckerIOS: ERROR - No top view controller found")
-                NSLog("🔔 ChuckerIOS: ERROR - No top view controller found")
                 return
             }
             
-            print("🔔 ChuckerIOS: Top view controller found: \(type(of: topViewController))")
-            NSLog("🔔 ChuckerIOS: Top view controller found: \(type(of: topViewController))")
-            
-            let chuckerVC = ChuckerIOSViewController()
-            let navController = UINavigationController(rootViewController: chuckerVC)
-            navController.modalPresentationStyle = .fullScreen
-            
-            print("🔔 ChuckerIOS: About to present UI")
-            topViewController.present(navController, animated: true) {
-                self.log("ChuckerIOS UI presented successfully", level: .info)
-                print("🔔 ChuckerIOS: UI presented successfully")
-                NSLog("🔔 ChuckerIOS: UI presented successfully")
+            // Check if ChuckerIOS UI is already presented
+            if topViewController is ChuckerIOSViewController || 
+               topViewController is UINavigationController && 
+               (topViewController as? UINavigationController)?.topViewController is ChuckerIOSViewController {
+                topViewController.dismiss(animated: false) {
+                    self.presentChuckerIOSUI()
+                }
+                return
             }
+            
+            self.presentChuckerIOSUI()
+        }
+        #else
+        log("UIKit not available - cannot show UI", level: .warning)
+        #endif
+    }
+    
+    /// Force show the ChuckerIOS UI (for debugging)
+    public func forceShow() {
+        show()
+    }
+    
+    #if canImport(UIKit)
+    private func presentChuckerIOSUI() {
+        guard let topViewController = self.getTopViewController() else {
+            self.log("Could not find top view controller to present ChuckerIOS UI", level: .error)
+            return
+        }
+        
+        let chuckerVC = ChuckerIOSViewController()
+        let navController = UINavigationController(rootViewController: chuckerVC)
+        navController.modalPresentationStyle = .fullScreen
+        
+        topViewController.present(navController, animated: true) {
+            self.log("ChuckerIOS UI presented successfully", level: .info)
         }
     }
     
@@ -107,6 +134,7 @@ public class ChuckerIOS {
         
         return topController
     }
+    #endif
     
     /// Get all captured transactions
     public func getAllTransactions() -> [HTTPTransaction] {
@@ -154,10 +182,14 @@ public class ChuckerIOS {
         }
         
         // Setup notification manager
-        if notificationManager == nil && configuration.showNotifications {
-            notificationManager = NotificationManager(configuration: configuration)
-            log("NotificationManager initialized", level: .debug)
+        #if canImport(UserNotifications)
+        if #available(iOS 10.0, macOS 10.14, *) {
+            if notificationManager == nil && configuration.showNotifications {
+                notificationManager = NotificationManager(configuration: configuration)
+                log("NotificationManager initialized", level: .debug)
+            }
         }
+        #endif
         
         // Setup floating button
         // Floating button not available in this build
@@ -185,7 +217,11 @@ extension ChuckerIOS: URLSessionInterceptorDelegate {
         
         // Show/update notification if enabled
         if configuration.showNotifications {
-            notificationManager?.showNotification(for: transaction)
+            #if canImport(UserNotifications)
+            if #available(iOS 10.0, macOS 10.14, *) {
+                (notificationManager as? NotificationManager)?.showNotification(for: transaction)
+            }
+            #endif
         }
         
         // Update floating button badge
