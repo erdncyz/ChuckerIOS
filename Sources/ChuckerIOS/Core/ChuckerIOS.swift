@@ -5,6 +5,9 @@ import UIKit
 #if canImport(UserNotifications)
 import UserNotifications
 #endif
+#if DEBUG
+import os.log
+#endif
 
 /// Main ChuckerIOS class - entry point for the library
 public class ChuckerIOS {
@@ -174,7 +177,6 @@ private func log(_ message: String, level: LogLevel = .info) {
     
     // For debug builds, also use os_log for system logging
     #if DEBUG
-    import os.log
     let logger = OSLog(subsystem: "com.chuckerios", category: "network")
     os_log("%{public}@", log: logger, type: .default, logMessage)
     #endif
